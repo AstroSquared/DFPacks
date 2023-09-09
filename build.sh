@@ -2,7 +2,7 @@
 mkdir .output
 
 for dir in */; do
-    if [[ ${dir:0:1} != "." ]]; then
+    if [[ $dir == .* ]]; then
         echo "Compiling resource pack: $dir"
         zip -r out.zip "./$dir"
         mv out.zip "./.output/$dir.zip"
