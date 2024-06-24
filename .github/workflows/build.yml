@@ -4,15 +4,65 @@ on:
   push
 
 jobs:
-  build:
+  configure:
     runs-on: ubuntu-latest
+    outputs:
+      packlist: ${{ steps.packlist.outputs.output }}
+      mkmatrix: ${{ steps.mkmatrix.outputs.output }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
+      - name: Make matrix
+        id: mkmatrix
+        run: |
+          dirs=($(find . -maxdepth 1 -type d ! -name '.*'))
+          dirs=("${dirs[@]//*.\//}")
 
-      - name: Build Resource Packs
-        run: "for dir in */; do zip -r \"./${dir%/}.zip\" \"$dir\"; done"
+          array_string="["
+          for (( i=0; i<${#dirs[@]}; i++ )); do
+            if [ $i -ne 0 ]; then
+              array_string="$array_string, "
+            fi
+            output="$output'${dirs[$i]}'"
+          done
+          output="$output]"
 
+          echo "output=$output" >> $GITHUB_OUTPUT
+    
+  build:
+    runs-on: ubuntu-latest
+    needs: [configure]
+    strategy:
+      matrix:
+        pack: ${{fromJSON(needs.configure.outputs.mkmatrix)}}
+    steps:
+      - name: Checkout Code
+        id: checkout
+        uses: actions/checkout@v3
+
+      - name: Compress resource pack
+        id: packsquash
+        uses: ComunidadAylas/PackSquash-action@v4
+        with:
+          packsquash_version: latest
+          options: |
+            pack_directory = '${{ matrix.pack }}'
+            output_file_path = './${{ matrix.pack }}.zip'
+      
+      - name: Upload pack
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.pack }}
+          path: "./${{ matrix.pack }}.zip"
+      
+  release:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - name: Download all packs
+        id: download-all
+        uses: actions/download-artifact@v4
       - name: Create Release
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
