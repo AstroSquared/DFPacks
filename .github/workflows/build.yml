@@ -39,6 +39,8 @@ jobs:
       - name: Checkout Code
         id: checkout
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Compress resource pack
         id: packsquash
