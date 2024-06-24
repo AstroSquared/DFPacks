@@ -58,8 +58,15 @@ jobs:
       - name: Download all packs
         id: download-all
         uses: actions/download-artifact@v4
-        with:
-          merge-multiple: true
+      - name: Move packs to root folder
+        id: move-packs
+        run: |
+          for dir in */; do
+            dir=${dir%/}
+            if [ -f "$dir/pack.zip" ]; then
+              mv "$dir/pack.zip" "./$dir.zip"
+            fi
+          done
       - name: Create Release
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
