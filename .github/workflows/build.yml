@@ -18,6 +18,8 @@ jobs:
           dirs=($(find . -maxdepth 1 -type d ! -name '.*'))
           dirs=("${dirs[@]//*.\//}")
 
+          echo $dirs
+
           array_string="["
           for (( i=0; i<${#dirs[@]}; i++ )); do
             if [ $i -ne 0 ]; then
@@ -26,6 +28,8 @@ jobs:
             output="$output'${dirs[$i]}'"
           done
           output="$output]"
+
+          echo $output
 
           echo "output=$output" >> $GITHUB_OUTPUT
     
